@@ -1,9 +1,9 @@
 ﻿<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>SpecFlow.RetryCore</id>
+    <id>Reqnroll.RetryCore</id>
     <version>1.0.0</version>
-    <title>SpecFlow.RetryCore</title>
-    <authors>Julio C. Tejero</authors>
+    <title>Reqnroll.RetryCore</title>
+    <authors></authors>
     <owners>Calrom Ltd.</owners>
     <description>Retry for SpecFlow</description>
     <summary></summary>

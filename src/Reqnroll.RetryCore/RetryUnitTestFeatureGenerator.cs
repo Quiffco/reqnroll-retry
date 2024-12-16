@@ -1,4 +1,4 @@
-﻿namespace SpecFlow.RetryCore
+﻿namespace Reqnroll.RetryCore
 {
     using System;
     using System.CodeDom;
@@ -9,14 +9,13 @@
     using System.Reflection;
     using System.Text.RegularExpressions;
     using Gherkin.Ast;
-    using TechTalk.SpecFlow;
-    using TechTalk.SpecFlow.Configuration;
-    using TechTalk.SpecFlow.Generator;
-    using TechTalk.SpecFlow.Generator.CodeDom;
-    using TechTalk.SpecFlow.Generator.UnitTestConverter;
-    using TechTalk.SpecFlow.Generator.UnitTestProvider;
-    using TechTalk.SpecFlow.Parser;
-    using TechTalk.SpecFlow.Tracing;
+    using Reqnroll.Configuration;
+    using Reqnroll.Generator;
+    using Reqnroll.Generator.CodeDom;
+    using Reqnroll.Generator.UnitTestConverter;
+    using Reqnroll.Generator.UnitTestProvider;
+    using Reqnroll.Parser;
+    using Reqnroll.Tracing;
 
     public class RetryUnitTestFeatureGenerator : IFeatureGenerator
     {
@@ -35,17 +34,17 @@
         private const string SPECFLOW_NAMESPACE = "TechTalk.SpecFlow";
 
         private readonly IUnitTestGeneratorProvider _testGeneratorProvider;
-        private readonly SpecFlowConfiguration _specFlowConfiguration;
+        private readonly ReqnrollConfiguration _reqnrollConfiguration;
         private readonly CodeDomHelper _codeDomHelper;
         private readonly IDecoratorRegistry _decoratorRegistry;
         private readonly ITagFilterMatcher _tagFilterMatcher;
 
         public RetryUnitTestFeatureGenerator(IUnitTestGeneratorProvider testGeneratorProvider,
-            CodeDomHelper codeDomHelper, SpecFlowConfiguration specFlowConfiguration,
+            CodeDomHelper codeDomHelper, ReqnrollConfiguration reqnrollConfiguration,
             IDecoratorRegistry decoratorRegistry, ITagFilterMatcher tagFilterMatcher)
         {
             this._testGeneratorProvider = testGeneratorProvider;
-            this._specFlowConfiguration = specFlowConfiguration;
+            this._reqnrollConfiguration = reqnrollConfiguration;
             this._codeDomHelper = codeDomHelper;
             this._decoratorRegistry = decoratorRegistry;
             this._tagFilterMatcher = tagFilterMatcher;
@@ -58,13 +57,13 @@
             return method;
         }
 
-        private static bool HasFeatureBackground(SpecFlowFeature feature)
+        private static bool HasFeatureBackground(ReqnrollFeature feature)
         {
             return feature.Background != null;
         }
 
         private TestClassGenerationContext CreateTestClassStructure(CodeNamespace codeNamespace, string testClassName,
-            SpecFlowDocument document)
+            ReqnrollDocument document)
         {
             var testClass = this._codeDomHelper.CreateGeneratedTypeDeclaration(testClassName);
             codeNamespace.Types.Add(testClass);
@@ -82,14 +81,14 @@
                 this.CreateMethod(testClass),
                 this.CreateMethod(testClass),
                 this.CreateMethod(testClass),
-                HasFeatureBackground(document.SpecFlowFeature) ? this.CreateMethod(testClass) : null,
+                HasFeatureBackground(document.ReqnrollFeature) ? this.CreateMethod(testClass) : null,
                 generateRowTests: this._testGeneratorProvider.GetTraits().HasFlag(UnitTestGeneratorTraits.RowTests) &&
-                                  this._specFlowConfiguration.AllowRowTests);
+                                  this._reqnrollConfiguration.AllowRowTests);
         }
 
         private CodeNamespace CreateNamespace(string targetNamespace)
         {
-            targetNamespace = targetNamespace ?? DEFAULT_NAMESPACE;
+            targetNamespace ??= DEFAULT_NAMESPACE;
 
             CodeNamespace codeNamespace = new CodeNamespace(targetNamespace);
 
@@ -97,11 +96,11 @@
             return codeNamespace;
         }
 
-        public CodeNamespace GenerateUnitTestFixture(SpecFlowDocument document, string testClassName,
+        public CodeNamespace GenerateUnitTestFixture(ReqnrollDocument document, string testClassName,
             string targetNamespace)
         {
             CodeNamespace codeNamespace = this.CreateNamespace(targetNamespace);
-            var feature = document.SpecFlowFeature;
+            var feature = document.ReqnrollFeature;
 
             testClassName = testClassName ?? string.Format(TESTCLASS_NAME_FORMAT, feature.Name.ToIdentifier());
             var generationContext = this.CreateTestClassStructure(codeNamespace, testClassName, document);
@@ -128,9 +127,8 @@
 
                 this.GenerateTest(generationContext, (Scenario)scenarioDefinition);
             }
-
-            //before return the generated code, call generate provider's method in case the provider want to customerize the generated code            
-            this._testGeneratorProvider.FinalizeTestClass(generationContext);
+            //before returning the generated code, call generate provider's method in case the provider want to customise the generated code            
+            _testGeneratorProvider.FinalizeTestClass(generationContext);
             return codeNamespace;
         }
 
@@ -268,12 +266,12 @@
             this._testGeneratorProvider.SetTestClassCleanupMethod(generationContext);
 
             var testRunnerField = this.GetTestRunnerExpression();
-            //            testRunner.OnFeatureEnd();
+            // testRunner.OnFeatureEnd();
             testClassCleanupMethod.Statements.Add(
                 new CodeMethodInvokeExpression(
                     testRunnerField,
                     "OnFeatureEnd"));
-            //            testRunner = null;
+            // testRunner = null;
             testClassCleanupMethod.Statements.Add(
                 new CodeAssignStatement(
                     testRunnerField,
@@ -316,7 +314,7 @@
             scenarioInitializeMethod.Parameters.Add(
                 new CodeParameterDeclarationExpression(typeof(ScenarioInfo), "scenarioInfo"));
 
-            //testRunner.OnScenarioStart(scenarioInfo);
+            // testRunner.OnScenarioStart(scenarioInfo);
             var testRunnerField = this.GetTestRunnerExpression();
             scenarioInitializeMethod.Statements.Add(
                 new CodeMethodInvokeExpression(
@@ -608,9 +606,14 @@
                     generationContext.ScenarioCleanupMethod.Name));
         }
 
-        private void SetupTestMethod(TestClassGenerationContext generationContext, CodeMemberMethod testMethod,
-            Scenario scenarioDefinition, IEnumerable<Tag> additionalTags, string variantName,
-            string exampleSetIdentifier, bool rowTest = false)
+        private void SetupTestMethod(
+            TestClassGenerationContext generationContext,
+            CodeMemberMethod testMethod,
+            Scenario scenarioDefinition,
+            IEnumerable<Tag> additionalTags,
+            string variantName,
+            string exampleSetIdentifier,
+            bool rowTest = false)
         {
             testMethod.Attributes = MemberAttributes.Public;
             testMethod.Name = GetTestMethodName(scenarioDefinition, variantName, exampleSetIdentifier);
@@ -632,8 +635,11 @@
             }
 
             List<string> scenarioCategories;
-            this._decoratorRegistry.DecorateTestMethod(generationContext, testMethod,
-                this.ConcatTags(scenarioDefinition.GetTags(), additionalTags), out scenarioCategories);
+            this._decoratorRegistry.DecorateTestMethod(
+                generationContext, 
+                testMethod,
+                this.ConcatTags(scenarioDefinition.GetTags(), additionalTags), 
+                out scenarioCategories);
 
             if (scenarioCategories.Any())
             {
@@ -641,7 +647,9 @@
             }
         }
 
-        private static string GetTestMethodName(Scenario scenario, string variantName,
+        private static string GetTestMethodName(
+            Scenario scenario,
+            string variantName,
             string exampleSetIdentifier)
         {
             var methodName = string.Format(TEST_NAME_FORMAT, scenario.Name.ToIdentifier());
@@ -705,8 +713,7 @@
             }
 
             var formatArguments = new List<CodeExpression> { new CodePrimitiveExpression(formatText) };
-            formatArguments.AddRange(arguments.Select(id => new CodeVariableReferenceExpression(id))
-                .Cast<CodeExpression>());
+            formatArguments.AddRange(arguments.Select(id => new CodeVariableReferenceExpression(id)));
 
             return new CodeMethodInvokeExpression(
                 new CodeTypeReferenceExpression(typeof(string)),
@@ -714,7 +721,9 @@
                 formatArguments.ToArray());
         }
 
-        private void GenerateStep(CodeMemberMethod testMethod, Step gherkinStep,
+        private void GenerateStep(
+            CodeMemberMethod testMethod,
+            Step gherkinStep,
             ParameterSubstitution paramToIdentifier)
         {
             var testRunnerField = this.GetTestRunnerExpression();
@@ -731,7 +740,7 @@
             arguments.Add(
                 this.GetDocStringArgExpression(scenarioStep.Argument as DocString, paramToIdentifier));
             arguments.Add(
-                this.GetTableArgExpression(scenarioStep.Argument as DataTable, testMethod.Statements, paramToIdentifier));
+                this.GetTableArgExpression(scenarioStep.Argument as Gherkin.Ast.DataTable, testMethod.Statements, paramToIdentifier));
             arguments.Add(new CodePrimitiveExpression(scenarioStep.Keyword));
 
             this.AddLineDirective(testMethod.Statements, scenarioStep);
@@ -742,9 +751,9 @@
                     arguments.ToArray()));
         }
 
-        private SpecFlowStep AsSpecFlowStep(Step step)
+        private ReqnrollStep AsSpecFlowStep(Step step)
         {
-            var specFlowStep = step as SpecFlowStep;
+            var specFlowStep = step as ReqnrollStep;
             if (specFlowStep == null)
             {
                 throw new TestGeneratorException("The step must be a SpecFlowStep.");
@@ -753,9 +762,11 @@
             return specFlowStep;
         }
 
-        private int _tableCounter = 0;
+        private int _tableCounter;
 
-        private CodeExpression GetTableArgExpression(DataTable tableArg, CodeStatementCollection statements,
+        private CodeExpression GetTableArgExpression(
+            DataTable tableArg, 
+            CodeStatementCollection statements,
             ParameterSubstitution paramToIdentifier)
         {
             if (tableArg == null)
@@ -765,17 +776,20 @@
 
             this._tableCounter++;
 
-            //TODO[Gherkin3]: remove dependency on having the first row as header
+            // TODO[Gherkin3]: remove dependency on having the first row as header
             var header = tableArg.Rows.First();
             var body = tableArg.Rows.Skip(1).ToArray();
 
-            //Table table0 = new Table(header...);
+            // Table table0 = new Table(header...);
             var tableVar = new CodeVariableReferenceExpression("table" + this._tableCounter);
             statements.Add(
-                new CodeVariableDeclarationStatement(typeof(Table), tableVar.VariableName,
-                    new CodeObjectCreateExpression(
-                        typeof(Table),
-                        this.GetStringArrayExpression(header.Cells.Select(c => c.Value), paramToIdentifier))));
+                new CodeVariableDeclarationStatement(
+                    typeof(Table), 
+                    tableVar.VariableName,
+                    new CodeObjectCreateExpression(typeof(Table),
+                        this.GetStringArrayExpression(
+                            header.Cells.Select(c => c.Value),
+                            paramToIdentifier))));
 
             foreach (var row in body)
             {
@@ -795,11 +809,9 @@
             return this.GetSubstitutedString(docString?.Content, paramToIdentifier);
         }
 
-        #region Line pragma handling
-
         private void AddLinePragmaInitial(CodeTypeDeclaration testType, string sourceFile)
         {
-            if (this._specFlowConfiguration.AllowDebugGeneratedFiles)
+            if (this._reqnrollConfiguration.AllowDebugGeneratedFiles)
             {
                 return;
             }
@@ -837,7 +849,5 @@
 
             //// _codeDomHelper.AddSourceLinePragmaStatement(statements, location.Line, location.Column);
         }
-
-        #endregion
     }
 }

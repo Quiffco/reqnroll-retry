@@ -1,8 +1,8 @@
-﻿namespace SpecFlow.RetryCore
+﻿namespace Reqnroll.RetryCore
 {
     using System.CodeDom;
-    using TechTalk.SpecFlow.Generator;
-    using TechTalk.SpecFlow.Generator.UnitTestConverter;
+    using Reqnroll.Generator;
+    using Reqnroll.Generator.UnitTestConverter;
 
     public class RemoveRetryTagFromCategoriesDecorator : ITestClassTagDecorator, ITestMethodTagDecorator
     {

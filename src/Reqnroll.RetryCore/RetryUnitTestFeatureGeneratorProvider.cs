@@ -1,7 +1,7 @@
-namespace SpecFlow.RetryCore
+namespace Reqnroll.RetryCore
 {
-    using TechTalk.SpecFlow.Generator.UnitTestConverter;
-    using TechTalk.SpecFlow.Parser;
+    using Reqnroll.Generator.UnitTestConverter;
+    using Reqnroll.Parser;
 
     public class RetryUnitTestFeatureGeneratorProvider : IFeatureGeneratorProvider
     {
@@ -12,12 +12,12 @@ namespace SpecFlow.RetryCore
             this._unitTestFeatureGenerator = unitTestFeatureGenerator;
         }
 
-        public bool CanGenerate(SpecFlowDocument document)
+        public bool CanGenerate(ReqnrollDocument document)
         {
             return true;
         }
 
-        public IFeatureGenerator CreateGenerator(SpecFlowDocument document)
+        public IFeatureGenerator CreateGenerator(ReqnrollDocument document)
         {
             return this._unitTestFeatureGenerator;
         }

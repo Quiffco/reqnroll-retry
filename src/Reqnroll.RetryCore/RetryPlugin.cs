@@ -1,11 +1,11 @@
-﻿using SpecFlow.RetryCore;
-using TechTalk.SpecFlow.Generator.Plugins;
-using TechTalk.SpecFlow.Generator.UnitTestConverter;
-using TechTalk.SpecFlow.Infrastructure;
-using TechTalk.SpecFlow.UnitTestProvider;
+﻿using Reqnroll.Generator.Plugins;
+using Reqnroll.Generator.UnitTestConverter;
+using Reqnroll.Infrastructure;
+using Reqnroll.RetryCore;
+using Reqnroll.UnitTestProvider;
 
 [assembly: GeneratorPlugin(typeof(GeneratorPlugin))]
-namespace SpecFlow.RetryCore
+namespace Reqnroll.RetryCore
 {
     public class GeneratorPlugin : IGeneratorPlugin
     {

@@ -2,11 +2,11 @@
 SpecFlow generator plugin that adds ability to retry tests on failure for MSTest/[NUnit](http://nunit.org/).
 
 ## Versions
-"SpecFlow.RetryCore" version="2.3.0" (dependency on "SpecFlow" version="2.4.8")
+"Reqnroll.RetryCore" version="1.0.0" (dependency on "Reqnroll" version="2.2.1")
 
 ## Setup
 
-Add the nuget package and the SpecFlow.CustomPlugin
+Add the nuget package
 
 ## Usage
 
